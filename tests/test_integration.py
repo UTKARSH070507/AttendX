@@ -189,4 +189,40 @@ def test_csv_upload_rejection_reporting(client):
     assert any('100' in r for r in rejection_reasons)
     assert any('duplicate' in r.lower() for r in rejection_reasons)
 
+def test_csv_import_immediate_statistical_impact(client):
+    """
+    Verifies that importing students via CSV immediately alters statistical outcomes
+    in the analysis endpoint without requiring server restart or manual caching flush.
+    """
+    # 1. Baseline analysis
+    base_res = client.get('/api/analyze')
+    base_size = base_res.get_json()['sample_size']
+    base_r = base_res.get_json()['pearson']['r']
+
+    # 2. Upload valid CSV records
+    csv_content = (
+        "roll_number,name,attendance_percentage,marks\n"
+        "STAT-01,Stat Student One,98.0,99.0\n"
+        "STAT-02,Stat Student Two,97.0,96.0\n"
+        "STAT-03,Stat Student Three,35.0,28.0\n"
+    )
+    upload_res = client.post(
+        '/api/upload',
+        data={'file': (io.BytesIO(csv_content.encode('utf-8')), 'stats_test.csv')},
+        content_type='multipart/form-data'
+    )
+    assert upload_res.status_code == 200
+    assert upload_res.get_json()['inserted_count'] == 3
+
+    # 3. Post-upload analysis
+    new_res = client.get('/api/analyze')
+    assert new_res.status_code == 200
+    new_data = new_res.get_json()
+    assert new_data['sample_size'] == base_size + 3
+    assert 'pearson' in new_data
+    assert 'spearman' in new_data
+    assert 'anova' in new_data
+    assert new_data['anova']['f_statistic'] > 0
+
+
 

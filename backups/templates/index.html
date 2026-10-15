@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AttendX - Student Attendance vs Academic Performance Analysis System</title>
+  <meta name="description" content="Academic analytics dashboard investigating student attendance correlation and statistical significance with examination marks.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/static/css/variables.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  
+  <!-- Local Offline-Ready Chart.js Bundle -->
+  <script src="/static/vendor/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+  <!-- =========================================================================
+       Sidebar Navigation
+       ========================================================================= -->
+  <aside id="sidebar" class="sidebar" aria-label="Main Navigation">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-icon">AX</div>
+      <div>
+        <span class="sidebar-brand">AttendX</span>
+        <span class="sidebar-subtitle">Academic Analytics</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Core Modules</div>
+      <ul class="nav-menu">
+        <li>
+          <a href="#dashboard" class="nav-link active" data-tab="dashboard" data-title="System Overview Dashboard">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="#students" class="nav-link" data-tab="students" data-title="Student Records Management">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span>Students</span>
+          </a>
+        </li>
+        <li>
+          <a href="#upload" class="nav-link" data-tab="upload" data-title="Dataset Import & Validation">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span>Dataset Upload</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-label" style="margin-top: 1rem;">Research & Insights</div>
+      <ul class="nav-menu">
+        <li>
+          <a href="#analysis" class="nav-link" data-tab="analysis" data-title="Statistical Analysis & Hypothesis Testing">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span>Statistical Analysis</span>
+          </a>
+        </li>
+        <li>
+          <a href="#reports" class="nav-link" data-tab="reports" data-title="Academic Export & Reports">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span>Reports</span>
+          </a>
+        </li>
+        <li>
+          <a href="#about" class="nav-link" data-tab="about" data-title="About Research & Methodology">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>About Project</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="badge-mode" style="background-color: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+        <span class="status-dot" style="background-color: #10b981;"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       Main Content Area
+       ========================================================================= -->
+  <div class="main-wrapper">
+    
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="menu-toggle-btn" class="menu-toggle-btn" aria-label="Toggle navigation menu">
+          <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        <h1 id="current-page-title" class="page-title">Dashboard</h1>
+      </div>
+
+      <div class="topbar-right">
+        <button class="btn btn-secondary btn-sm" onclick="App.exportStudentsCSV()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Export CSV</span>
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="App.openAddStudentModal()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Add Student</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="content-area">
+
+      <!-- =====================================================================
+           SECTION 1: DASHBOARD
+           ===================================================================== -->
+      <section id="section-dashboard" class="tab-section active">
+        
+        <!-- Live System Status Notice -->
+        <div id="dashboard-alert-container"></div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid-4" style="margin-bottom: var(--spacing-6);">
+          
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Total Sample Size</span>
+              <div class="stat-card-icon">
+                <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </div>
+            </div>
+            <div id="stat-total-students" class="stat-card-value">30</div>
+            <div class="stat-card-meta"><span>Valid student observations ($N$)</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Mean Attendance</span>
+              <div class="stat-card-icon">
+                <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+            </div>
+            <div id="stat-avg-attendance" class="stat-card-value">74.5%</div>
+            <div class="stat-card-meta"><span>Overall cohort average</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Mean Exam Marks</span>
+              <div class="stat-card-icon">
+                <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              </div>
+            </div>
+            <div id="stat-avg-marks" class="stat-card-value">70.2</div>
+            <div class="stat-card-meta"><span>Out of 100.0 maximum</span></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Cohort Classification</span>
+              <div class="stat-card-icon">
+                <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+              <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
+                <span>High (≥80%):</span> <strong id="stat-group-high" style="color:var(--group-high);">14 (47%)</strong>
+              </div>
+              <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
+                <span>Med (60-80%):</span> <strong id="stat-group-medium" style="color:var(--group-med);">10 (33%)</strong>
+              </div>
+              <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
+                <span>Low (&lt;60%):</span> <strong id="stat-group-low" style="color:var(--group-low);">6 (20%)</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid-2" style="margin-bottom: var(--spacing-6);">
+          
+          <!-- Scatter Plot -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">
+                  <svg style="width:18px; height:18px; color:var(--color-primary);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+                  <span>Attendance vs Examination Marks</span>
+                </h3>
+                <p class="card-description">Bivariate scatter plot with fitted Ordinary Least Squares (OLS) trendline</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="chart-scatter"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group Comparison Bar Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">
+                  <svg style="width:18px; height:18px; color:var(--color-primary);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  <span>Mean Examination Marks by Attendance Level</span>
+                </h3>
+                <p class="card-description">Comparative group performance across Low, Medium, and High attendance tiers</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="chart-groups"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Summary of Statistical Analysis Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <svg style="width:18px; height:18px; color:var(--color-primary);" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+              <span>Statistical Inference Summary</span>
+            </h3>
+            <a href="#analysis" class="btn btn-secondary btn-sm" onclick="document.querySelector('[data-tab=analysis]').click()">Full Statistical Report &rarr;</a>
+          </div>
+          <div class="card-body">
+            <div class="grid-3">
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Linear Correlation (r)</span>
+                <span id="dash-summary-r" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                <span id="dash-summary-r-sub" class="stat-highlight-sub">Computing Pearson r...</span>
+              </div>
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Rank Correlation (&rho;)</span>
+                <span id="dash-summary-rho" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                <span id="dash-summary-rho-sub" class="stat-highlight-sub">Computing Spearman &rho;...</span>
+              </div>
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Multi-Group ANOVA</span>
+                <span id="dash-summary-anova" class="stat-highlight-val" style="color:var(--status-success);">--</span>
+                <span id="dash-summary-anova-sub" class="stat-highlight-sub">Evaluating group variances...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================================
+           SECTION 2: STUDENT MANAGEMENT
+           ===================================================================== -->
+      <section id="section-students" class="tab-section">
+        
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Student Records Management</h3>
+              <p class="card-description">View, search, filter, add, edit, or delete individual academic student observations.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span id="students-count-badge" class="badge badge-primary">30 Records</span>
+              <button class="btn btn-primary btn-sm" onclick="App.openAddStudentModal()">+ Add Student</button>
+            </div>
+          </div>
+
+          <div class="card-body">
+            
+            <!-- Toolbar: Search, Filter, Sort -->
+            <div class="toolbar">
+              <div class="toolbar-search">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input id="student-search-input" type="text" class="form-control" placeholder="Search by name or roll number..." aria-label="Search students">
+              </div>
+
+              <div class="toolbar-filters">
+                <select id="student-group-filter" class="form-control" style="width: 170px;" aria-label="Filter by Attendance Group">
+                  <option value="all">All Attendance Groups</option>
+                  <option value="high">High (≥80%)</option>
+                  <option value="medium">Medium (60-80%)</option>
+                  <option value="low">Low (&lt;60%)</option>
+                </select>
+
+                <select id="student-sort-select" class="form-control" style="width: 160px;" aria-label="Sort records">
+                  <option value="roll_number-asc">Roll No (Asc)</option>
+                  <option value="roll_number-desc">Roll No (Desc)</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="attendance_percentage-desc">Attendance (High &rarr; Low)</option>
+                  <option value="attendance_percentage-asc">Attendance (Low &rarr; High)</option>
+                  <option value="marks-desc">Marks (High &rarr; Low)</option>
+                  <option value="marks-asc">Marks (Low &rarr; High)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Student Table -->
+            <div class="table-responsive">
+              <table class="data-table" aria-label="Student records data table">
+                <thead>
+                  <tr>
+                    <th>Roll Number</th>
+                    <th>Student Name</th>
+                    <th>Attendance %</th>
+                    <th>Exam Marks</th>
+                    <th>Classification</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body">
+                  <!-- Populated dynamically via App.renderStudentTable() -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination Toolbar -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1.25rem;">
+              <span id="pagination-info" style="font-size:var(--font-size-xs); color:var(--text-muted);">Page 1 of 4</span>
+              <div style="display:flex; gap:0.5rem;">
+                <button id="prev-page-btn" class="btn btn-secondary btn-sm" disabled>&larr; Previous</button>
+                <button id="next-page-btn" class="btn btn-secondary btn-sm">Next &rarr;</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================================
+           SECTION 3: DATASET UPLOAD
+           ===================================================================== -->
+      <section id="section-upload" class="tab-section">
+        
+        <div class="grid-2">
+          
+          <!-- Upload Area Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Import Student Dataset (CSV)</h3>
+            </div>
+            <div class="card-body">
+              
+              <div id="upload-dropzone" class="upload-dropzone">
+                <input type="file" id="csv-file-input" accept=".csv" style="display:none;" aria-label="Choose CSV file">
+                <svg class="dropzone-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <h4 class="dropzone-title">Click to upload or drag &amp; drop CSV file</h4>
+                <p class="dropzone-subtitle">Supported format: Standard comma-separated (.csv) &bull; Maximum file size: 2 MB</p>
+                <button type="button" class="btn btn-primary btn-sm">Select CSV File</button>
+              </div>
+
+              <!-- Required Columns Specification -->
+              <div style="margin-top: var(--spacing-6);">
+                <h4 style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--spacing-2);">Required CSV Structure</h4>
+                <div class="table-responsive">
+                  <table class="data-table" style="font-size: 0.8rem;">
+                    <thead>
+                      <tr>
+                        <th>Column Header</th>
+                        <th>Type</th>
+                        <th>Valid Range</th>
+                        <th>Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>roll_number</code></td>
+                        <td>String</td>
+                        <td>Unique alphanumeric</td>
+                        <td><code>CS2026-042</code></td>
+                      </tr>
+                      <tr>
+                        <td><code>name</code></td>
+                        <td>String</td>
+                        <td>Non-empty text</td>
+                        <td><code>Pooja Sharma</code></td>
+                      </tr>
+                      <tr>
+                        <td><code>attendance_percentage</code></td>
+                        <td>Float</td>
+                        <td>0.0 to 100.0</td>
+                        <td><code>84.5</code></td>
+                      </tr>
+                      <tr>
+                        <td><code>marks</code></td>
+                        <td>Float</td>
+                        <td>0.0 to 100.0</td>
+                        <td><code>79.0</code></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Upload Status & Feedback Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Validation Guidelines &amp; Status</h3>
+            </div>
+            <div class="card-body">
+              
+              <div id="upload-status-card" style="display:none; margin-bottom: var(--spacing-6);">
+                <h4 style="font-size:var(--font-size-sm); font-weight:600; margin-bottom:var(--spacing-3);">Last Import Result</h4>
+                <div id="upload-summary-stats" class="grid-3" style="gap:var(--spacing-3); margin-bottom:var(--spacing-4);">
+                  <!-- Populated on file import -->
+                </div>
+                
+                <div id="upload-rejections-container" style="display:none;">
+                  <h5 style="font-size:var(--font-size-xs); font-weight:600; color:var(--status-danger); text-transform:uppercase; margin-bottom:var(--spacing-2);">Rejected Rows Log</h5>
+                  <div class="table-responsive" style="max-height: 200px; overflow-y:auto;">
+                    <table class="data-table" style="font-size:0.75rem;">
+                      <thead>
+                        <tr>
+                          <th>Row</th>
+                          <th>Roll No</th>
+                          <th>Validation Issue</th>
+                        </tr>
+                      </thead>
+                      <tbody id="upload-rejections-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Integrity Guarantee Rules -->
+              <h4 style="font-size:var(--font-size-sm); font-weight:600; margin-bottom:var(--spacing-2);">Validation &amp; Integrity Enforcement</h4>
+              <ul style="font-size:var(--font-size-sm); color:var(--text-secondary); padding-left:1.25rem; display:flex; flex-direction:column; gap:0.5rem;">
+                <li><strong>Strict Type Coercion:</strong> Values for attendance and marks are converted to floating-point numbers. Non-numeric entries are quarantined.</li>
+                <li><strong>Range Checking:</strong> Attendance must satisfy $0 \le x \le 100$ and marks must satisfy $0 \le y \le 100$. Out-of-bounds rows are rejected.</li>
+                <li><strong>Deduplication:</strong> Duplicate roll numbers already registered in the system will not overwrite existing student data.</li>
+                <li><strong>Non-Destructive Parsing:</strong> Malformed rows are explicitly rejected with line numbers, while all valid rows are safely committed.</li>
+              </ul>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================================
+           SECTION 4: STATISTICAL ANALYSIS
+           ===================================================================== -->
+      <section id="section-analysis" class="tab-section">
+        
+        <!-- Research Hypotheses Banner -->
+        <div class="card">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="card-title">Research Hypotheses Formulation</h3>
+            <button id="btn-recalculate-analysis" class="btn btn-secondary btn-sm" onclick="App.loadStatisticalAnalysis()" title="Recalculate statistical testing from database">
+              <svg style="width:14px; height:14px; margin-right:4px; vertical-align:text-bottom;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Recalculate Analysis</span>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="grid-2">
+              <div class="hypothesis-box">
+                <div class="hypothesis-title">Research Question 1: Association</div>
+                <p style="font-size:var(--font-size-sm); color:var(--text-secondary); margin-bottom:0.25rem;">
+                  <strong>$H_0$:</strong> The population linear correlation between attendance and examination marks is zero ($\rho = 0$).<br>
+                  <strong>$H_1$:</strong> The population linear correlation between attendance and examination marks is nonzero ($\rho \ne 0$).
+                </p>
+                <span class="badge badge-high" style="margin-top:0.5rem;">Two-Sided Test (&alpha; = 0.05)</span>
+              </div>
+
+              <div class="hypothesis-box">
+                <div class="hypothesis-title">Research Question 2: Group Differences</div>
+                <p style="font-size:var(--font-size-sm); color:var(--text-secondary); margin-bottom:0.25rem;">
+                  <strong>$H_0$:</strong> Population mean marks are equal across all attendance tiers ($\mu_{\text{Low}} = \mu_{\text{Med}} = \mu_{\text{High}}$).<br>
+                  <strong>$H_1$:</strong> At least one attendance group exhibits a statistically distinct mean examination mark.
+                </p>
+                <span class="badge badge-high" style="margin-top:0.5rem;">One-Way ANOVA / Welch's Test</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Correlation Results Panel -->
+        <div class="grid-2" style="margin-bottom: var(--spacing-6);">
+          
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Pearson Correlation Coefficient ($r$)</h3>
+              <span class="badge badge-primary">Parametric</span>
+            </div>
+            <div class="card-body">
+              <div class="grid-2" style="margin-bottom:var(--spacing-4);">
+                <div class="stat-highlight-box">
+                  <span class="stat-highlight-title">Correlation (r)</span>
+                  <span id="stats-pearson-r" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                  <span id="stats-pearson-strength" class="stat-highlight-sub">Awaiting calculation...</span>
+                </div>
+                <div class="stat-highlight-box">
+                  <span class="stat-highlight-title">Two-Sided P-Value</span>
+                  <span id="stats-pearson-p" class="stat-highlight-val" style="color:var(--status-success);">--</span>
+                  <span id="stats-pearson-sig" class="stat-highlight-sub">Significance (&alpha;=0.05)</span>
+                </div>
+              </div>
+              <div style="font-size:var(--font-size-xs); color:var(--text-secondary); background:var(--bg-surface-alt); padding:var(--spacing-3); border-radius:var(--radius-md);">
+                <div><strong>95% Confidence Interval:</strong> <span id="stats-pearson-ci">[--, --]</span></div>
+                <div style="margin-top:4px;"><strong>Interpretation:</strong> <span id="stats-pearson-interp">Evaluates linear association between attendance percentage and exam marks.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Spearman Rank Correlation ($\rho$)</h3>
+              <span class="badge badge-neutral">Non-Parametric</span>
+            </div>
+            <div class="card-body">
+              <div class="grid-2" style="margin-bottom:var(--spacing-4);">
+                <div class="stat-highlight-box">
+                  <span class="stat-highlight-title">Rank Correlation (&rho;)</span>
+                  <span id="stats-spearman-rho" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                  <span class="stat-highlight-sub">Monotonic Relationship</span>
+                </div>
+                <div class="stat-highlight-box">
+                  <span class="stat-highlight-title">P-Value</span>
+                  <span id="stats-spearman-p" class="stat-highlight-val" style="color:var(--status-success);">--</span>
+                  <span class="stat-highlight-sub">Statistically Significant</span>
+                </div>
+              </div>
+              <div style="font-size:var(--font-size-xs); color:var(--text-secondary); background:var(--bg-surface-alt); padding:var(--spacing-3); border-radius:var(--radius-md);">
+                <div><strong>Evaluation Scope:</strong> Rank-order monotonic relationship (robust against non-normality and potential outliers).</div>
+                <div style="margin-top:4px;"><strong>Sample Size ($N$):</strong> <span id="stats-sample-n">30</span> observations</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Attendance Group Statistics Table -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Attendance Tier Descriptive Breakdown</h3>
+              <p class="card-description">Summary statistics of examination marks grouped by project-defined attendance levels</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Attendance Group</th>
+                    <th>Count ($n$)</th>
+                    <th>Mean Marks</th>
+                    <th>Median Marks</th>
+                    <th>Std Dev ($\sigma$)</th>
+                    <th>Min &ndash; Max</th>
+                  </tr>
+                </thead>
+                <tbody id="stats-group-table-body">
+                  <!-- Populated by App.updateStatisticalAnalysis() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANOVA & Post-Hoc Analysis Results -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Multi-Group Variance &amp; Post-Hoc Comparisons</h3>
+              <p class="card-description">Hypothesis 2: Evaluation of differences in examination marks across attendance tiers</p>
+            </div>
+            <span id="anova-test-badge" class="badge badge-primary">One-Way ANOVA</span>
+          </div>
+          <div class="card-body">
+            <div class="grid-2" style="margin-bottom:var(--spacing-5);">
+              
+              <!-- ANOVA Test Summary Box -->
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title" id="anova-method-title">Omnibus Hypothesis Test</span>
+                <div style="display:flex; align-items:baseline; gap:0.5rem; margin-top:4px;">
+                  <span id="anova-f-stat" class="stat-highlight-val">F = --</span>
+                  <span id="anova-df-stat" style="font-size:var(--font-size-xs); color:var(--text-muted);">(df1, df2)</span>
+                </div>
+                <div id="anova-p-val" style="font-size:var(--font-size-sm); font-weight:600; color:var(--status-success); margin-top:2px;">p = --</div>
+                <div id="anova-verdict" class="stat-highlight-sub">Awaiting statistical analysis calculation...</div>
+              </div>
+
+              <!-- Homogeneity of Variance Box -->
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Assumption: Homogeneity of Variance</span>
+                <div style="display:flex; align-items:baseline; gap:0.5rem; margin-top:4px;">
+                  <span id="levene-stat" class="stat-highlight-val" style="font-size:1.25rem;">Levene W = --</span>
+                </div>
+                <div id="levene-p-val" style="font-size:var(--font-size-sm); font-weight:600; color:var(--text-main); margin-top:2px;">p = --</div>
+                <div id="levene-verdict" class="stat-highlight-sub">Assessing variance equality across groups.</div>
+              </div>
+
+            </div>
+
+            <!-- Post-Hoc Comparisons Table -->
+            <div>
+              <h4 style="font-size:var(--font-size-sm); font-weight:600; margin-bottom:var(--spacing-2);">Pairwise Post-Hoc Comparisons (<span id="posthoc-method-name">Tukey HSD</span>)</h4>
+              <div class="table-responsive">
+                <table class="data-table" style="font-size:0.8rem;">
+                  <thead>
+                    <tr>
+                      <th>Pairwise Comparison</th>
+                      <th>Mean Difference</th>
+                      <th>95% Confidence Interval</th>
+                      <th>Adjusted P-Value</th>
+                      <th>Significant (&alpha;=0.05)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="posthoc-table-body">
+                    <!-- Populated dynamically via App.updateStatisticalAnalysis() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Academic Integrity & Limitations Notice -->
+        <div class="card" style="border-left: 4px solid var(--color-primary);">
+          <div class="card-body">
+            <h4 style="font-size:var(--font-size-sm); font-weight:600; margin-bottom:0.5rem;">Methodological Clarification &amp; Causality Boundaries</h4>
+            <p style="font-size:var(--font-size-sm); color:var(--text-secondary); line-height:1.6;">
+              <strong>Association vs. Causation:</strong> A statistically significant correlation or ANOVA result demonstrates an empirical association, but does <em>not</em> establish that higher attendance directly causes improved examination marks. Confounding factors—such as prior subject preparation, study hours, socioeconomic factors, and classroom engagement—also influence performance.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================================
+           SECTION 5: REPORTS
+           ===================================================================== -->
+      <section id="section-reports" class="tab-section">
+        
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Academic Reports &amp; Data Export</h3>
+              <p class="card-description">Download raw dataset records and statistical summaries for evaluation and publication.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid-2">
+              
+              <!-- CSV Dataset Export -->
+              <div class="card" style="margin-bottom:0;">
+                <div class="card-body">
+                  <div style="display:flex; align-items:center; gap:var(--spacing-3); margin-bottom:var(--spacing-3);">
+                    <div class="stat-card-icon" style="background-color:#ecfdf5; color:var(--status-success);">
+                      <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div>
+                      <h4 style="font-size:var(--font-size-sm); font-weight:600;">Student Dataset (CSV)</h4>
+                      <p style="font-size:var(--font-size-xs); color:var(--text-muted);">Comma-separated values with complete student observations</p>
+                    </div>
+                  </div>
+                  <p style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-bottom:var(--spacing-4);">
+                    Contains: <code>id</code>, <code>roll_number</code>, <code>name</code>, <code>attendance_percentage</code>, <code>marks</code>.
+                  </p>
+                  <button id="export-report-csv-btn" class="btn btn-primary btn-sm">Download Dataset CSV</button>
+                </div>
+              </div>
+
+              <!-- PDF Report (Reserved Space) -->
+              <div class="card" style="margin-bottom:0; opacity:0.85;">
+                <div class="card-body">
+                  <div style="display:flex; align-items:center; gap:var(--spacing-3); margin-bottom:var(--spacing-3);">
+                    <div class="stat-card-icon" style="background-color:#eff6ff; color:var(--color-primary);">
+                      <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                      <h4 style="font-size:var(--font-size-sm); font-weight:600;">Formal Academic Report (PDF)</h4>
+                      <p style="font-size:var(--font-size-xs); color:var(--text-muted);">Publication-ready document containing charts, ANOVA tables, and citations</p>
+                    </div>
+                  </div>
+                  <p style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-bottom:var(--spacing-4);">
+                    <span class="badge badge-neutral">Phase 7 Feature Reservation</span> &bull; You can also use your browser's Print feature (Ctrl+P / Cmd+P) for a print-optimized layout.
+                  </p>
+                  <button class="btn btn-secondary btn-sm" onclick="window.print()">Print Dashboard (Ctrl+P)</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================================
+           SECTION 6: ABOUT PROJECT
+           ===================================================================== -->
+      <section id="section-about" class="tab-section">
+        
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Project Overview &amp; Research Methodology</h3>
+              <p class="card-description">Academic framework, problem statement, and mathematical testing procedures</p>
+            </div>
+          </div>
+          <div class="card-body">
+            
+            <h4 style="font-size:var(--font-size-md); font-weight:600; margin-bottom:0.5rem; color:var(--color-primary);">Project Objective</h4>
+            <p style="font-size:var(--font-size-sm); color:var(--text-secondary); line-height:1.6; margin-bottom:var(--spacing-5);">
+              The primary aim of the <strong>Student Attendance vs Academic Performance Analysis System (AttendX)</strong> is to empirically evaluate whether student class attendance percentage is significantly correlated with examination performance, and whether students belonging to distinct attendance tiers (Low, Medium, High) exhibit statistically significant variances in their examination marks.
+            </p>
+
+            <div class="grid-2" style="margin-bottom:var(--spacing-6);">
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Hypothesis 1: Linear Association</span>
+                <p style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-top:4px;">
+                  Investigated via Pearson's product-moment correlation coefficient ($r$) and Spearman's rank correlation ($\rho$). Evaluated at significance level $\alpha = 0.05$.
+                </p>
+              </div>
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Hypothesis 2: Multi-Group Variance</span>
+                <p style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-top:4px;">
+                  Investigated using One-Way Analysis of Variance (ANOVA). If homogeneity of variance is violated (tested via Levene's test), Welch's ANOVA is applied followed by Games-Howell post-hoc testing.
+                </p>
+              </div>
+            </div>
+
+            <h4 style="font-size:var(--font-size-md); font-weight:600; margin-bottom:0.5rem; color:var(--color-primary);">Technology Stack</h4>
+            <div class="grid-3">
+              <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--spacing-3);">
+                <strong>Frontend:</strong>
+                <div style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-top:4px;">HTML5, CSS3, Vanilla JavaScript (ES6+), Chart.js (offline UMD bundle)</div>
+              </div>
+              <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--spacing-3);">
+                <strong>Backend &amp; DB:</strong>
+                <div style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-top:4px;">Python 3, Flask REST API, SQLite3 with parameterized queries and constraints</div>
+              </div>
+              <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:var(--spacing-3);">
+                <strong>Data &amp; Statistics:</strong>
+                <div style="font-size:var(--font-size-xs); color:var(--text-secondary); margin-top:4px;">Pandas, NumPy, SciPy (scipy.stats: pearsonr, spearmanr, f_oneway, alexandergovern)</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+</div>
+
+
+<!-- ===========================================================================
+     ACCESSIBLE MODAL: ADD / EDIT STUDENT
+     =========================================================================== -->
+<div id="student-form-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="student-modal-title" class="modal-title">Add New Student</h3>
+      <button class="modal-close-btn" data-close-modal aria-label="Close dialog">&times;</button>
+    </div>
+    <form id="student-form">
+      <div class="modal-body">
+        <input type="hidden" id="student-id-field">
+
+        <div class="form-group">
+          <label for="student-roll-field" class="form-label">Roll Number <span class="required">*</span></label>
+          <input type="text" id="student-roll-field" class="form-control" placeholder="e.g. CS2026-031" required autocomplete="off">
+          <div class="form-helper">Unique institutional identifier (alphanumeric).</div>
+        </div>
+
+        <div class="form-group">
+          <label for="student-name-field" class="form-label">Full Name <span class="required">*</span></label>
+          <input type="text" id="student-name-field" class="form-control" placeholder="e.g. Priya Sharma" required autocomplete="name">
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="student-attendance-field" class="form-label">Attendance (%) <span class="required">*</span></label>
+            <input type="number" id="student-attendance-field" class="form-control" min="0" max="100" step="0.1" placeholder="0.0 - 100.0" required>
+            <div class="form-helper">Valid range: 0.0 to 100.0%</div>
+          </div>
+
+          <div class="form-group">
+            <label for="student-marks-field" class="form-label">Exam Marks <span class="required">*</span></label>
+            <input type="number" id="student-marks-field" class="form-control" min="0" max="100" step="0.1" placeholder="0.0 - 100.0" required>
+            <div class="form-helper">Valid range: 0.0 to 100.0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ===========================================================================
+     ACCESSIBLE MODAL: DELETE CONFIRMATION
+     =========================================================================== -->
+<div id="delete-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+  <div class="modal-dialog" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3 id="delete-modal-title" class="modal-title" style="color:var(--status-danger);">Confirm Deletion</h3>
+      <button class="modal-close-btn" data-close-modal aria-label="Close dialog">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:var(--font-size-sm); color:var(--text-secondary); line-height:1.5;">
+        Are you sure you want to permanently delete the student record for <strong id="delete-student-name"></strong>?
+      </p>
+      <p style="font-size:var(--font-size-xs); color:var(--status-danger); margin-top:0.5rem;">
+        This action cannot be undone.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+      <button id="confirm-delete-btn" type="button" class="btn btn-danger">Delete Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="/static/js/ui.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>
+

@@ -148,7 +148,7 @@
                 <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               </div>
             </div>
-            <div id="stat-total-students" class="stat-card-value">30</div>
+            <div id="stat-total-students" class="stat-card-value">--</div>
             <div class="stat-card-meta"><span>Valid student observations ($N$)</span></div>
           </div>
 
@@ -159,7 +159,7 @@
                 <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </div>
             </div>
-            <div id="stat-avg-attendance" class="stat-card-value">74.5%</div>
+            <div id="stat-avg-attendance" class="stat-card-value">--%</div>
             <div class="stat-card-meta"><span>Overall cohort average</span></div>
           </div>
 
@@ -170,7 +170,7 @@
                 <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
               </div>
             </div>
-            <div id="stat-avg-marks" class="stat-card-value">70.2</div>
+            <div id="stat-avg-marks" class="stat-card-value">--</div>
             <div class="stat-card-meta"><span>Out of 100.0 maximum</span></div>
           </div>
 
@@ -183,13 +183,13 @@
             </div>
             <div style="display:flex; flex-direction:column; gap:4px; margin-top:2px;">
               <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
-                <span>High (≥80%):</span> <strong id="stat-group-high" style="color:var(--group-high);">14 (47%)</strong>
+                <span>High (≥80%):</span> <strong id="stat-group-high" style="color:var(--group-high);">--</strong>
               </div>
               <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
-                <span>Med (60-80%):</span> <strong id="stat-group-medium" style="color:var(--group-med);">10 (33%)</strong>
+                <span>Med (60-80%):</span> <strong id="stat-group-medium" style="color:var(--group-med);">--</strong>
               </div>
               <div style="font-size:0.8rem; display:flex; justify-content:space-between;">
-                <span>Low (&lt;60%):</span> <strong id="stat-group-low" style="color:var(--group-low);">6 (20%)</strong>
+                <span>Low (&lt;60%):</span> <strong id="stat-group-low" style="color:var(--group-low);">--</strong>
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@
               <p class="card-description">View, search, filter, add, edit, or delete individual academic student observations.</p>
             </div>
             <div style="display:flex; align-items:center; gap:0.75rem;">
-              <span id="students-count-badge" class="badge badge-primary">30 Records</span>
+              <span id="students-count-badge" class="badge badge-primary">-- Records</span>
               <button class="btn btn-primary btn-sm" onclick="App.openAddStudentModal()">+ Add Student</button>
             </div>
           </div>
@@ -337,7 +337,7 @@
 
             <!-- Pagination Toolbar -->
             <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1.25rem;">
-              <span id="pagination-info" style="font-size:var(--font-size-xs); color:var(--text-muted);">Page 1 of 4</span>
+              <span id="pagination-info" style="font-size:var(--font-size-xs); color:var(--text-muted);">Loading records...</span>
               <div style="display:flex; gap:0.5rem;">
                 <button id="prev-page-btn" class="btn btn-secondary btn-sm" disabled>&larr; Previous</button>
                 <button id="next-page-btn" class="btn btn-secondary btn-sm">Next &rarr;</button>
