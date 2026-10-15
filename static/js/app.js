@@ -81,8 +81,11 @@ const App = (() => {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">
-          <div style="display:inline-block; animation: pulse 1s infinite;">Loading records from database...</div>
+        <td colspan="6" style="text-align:center; padding: 2.5rem; color: var(--text-muted);">
+          <div style="display:flex; align-items:center; justify-content:center; gap:0.75rem;">
+            <span class="spinner"></span>
+            <span style="font-size:0.9rem;">Loading student observations from database...</span>
+          </div>
         </td>
       </tr>
     `;
@@ -99,8 +102,9 @@ const App = (() => {
     if (!res.ok) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; padding: 2rem; color: var(--status-danger);">
-            ${UI.escapeHTML(res.error)}
+          <td colspan="6" style="text-align:center; padding: 2.5rem; color: var(--status-danger);">
+            <div style="font-weight:600; margin-bottom:0.25rem;">Failed to retrieve records</div>
+            <div style="font-size:0.85rem;">${UI.escapeHTML(res.error)}</div>
           </td>
         </tr>
       `;
@@ -121,9 +125,14 @@ const App = (() => {
     if (students.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; padding: 2.5rem; color: var(--text-muted);">
-            <div style="font-size: 1.05rem; font-weight: 500; margin-bottom: 0.25rem;">No student records found</div>
-            <div style="font-size: 0.85rem;">Adjust search query or filter options, or import a dataset.</div>
+          <td colspan="6">
+            <div class="empty-state">
+              <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              <div class="empty-state-title">No student observations found</div>
+              <div class="empty-state-desc">Try clearing your search term, changing the attendance tier filter, or uploading a CSV dataset.</div>
+            </div>
           </td>
         </tr>
       `;

@@ -241,4 +241,147 @@ def test_cors_headers_and_preflight(client):
     assert students_res.status_code == 200
     assert students_res.headers.get('Access-Control-Allow-Origin') == 'http://127.0.0.1:5500'
 
+# ==============================================================================
+# 5. Phase 6 Comprehensive Quality & Security Gate Tests
+# ==============================================================================
+def test_data_persistence_across_app_restart(tmp_path):
+    """
+    Verifies that records inserted into SQLite persist across separate application
+    instances and server restarts without data loss.
+    """
+    persistent_db = str(tmp_path / "persistent_test.db")
+
+    class PersistConfig(TestConfig):
+        DATABASE_PATH = persistent_db
+        TESTING = True
+
+    # First app session: Insert a student
+    app1 = create_app(PersistConfig)
+    client1 = app1.test_client()
+    create_res = client1.post('/api/students', json={
+        'roll_number': 'PERSIST-01',
+        'name': 'Persistent Student',
+        'attendance_percentage': 88.0,
+        'marks': 85.0
+    })
+    assert create_res.status_code == 201
+
+    # Second app session: Simulate complete server reboot using same database file
+    app2 = create_app(PersistConfig)
+    client2 = app2.test_client()
+    get_res = client2.get('/api/students?search=PERSIST-01')
+    assert get_res.status_code == 200
+    data = get_res.get_json()
+    assert len(data['students']) == 1
+    assert data['students'][0]['roll_number'] == 'PERSIST-01'
+    assert data['students'][0]['name'] == 'Persistent Student'
+
+def test_validation_missing_required_fields(client):
+    """
+    Verifies rejection of payloads missing roll_number, name, attendance, or marks.
+    """
+    # Missing name
+    res1 = client.post('/api/students', json={
+        'roll_number': 'MISS-01',
+        'attendance_percentage': 75.0,
+        'marks': 70.0
+    })
+    assert res1.status_code == 400
+    assert 'name' in res1.get_json()['errors']
+
+    # Missing attendance
+    res2 = client.post('/api/students', json={
+        'roll_number': 'MISS-02',
+        'name': 'No Attendance',
+        'marks': 70.0
+    })
+    assert res2.status_code == 400
+    assert 'attendance_percentage' in res2.get_json()['errors']
+
+def test_validation_malformed_json_payload(client):
+    """
+    Verifies that non-JSON or malformed requests return HTTP 400 with a clear error.
+    """
+    res = client.post(
+        '/api/students',
+        data="This is plain text, not JSON",
+        content_type='text/plain'
+    )
+    assert res.status_code == 400
+
+def test_csv_unsupported_file_type(client):
+    """
+    Verifies that non-CSV files (.txt, .pdf, .json) are rejected with HTTP 400.
+    """
+    fake_txt = io.BytesIO(b"Hello world, not a csv")
+    res = client.post(
+        '/api/upload',
+        data={'file': (fake_txt, 'document.txt')},
+        content_type='multipart/form-data'
+    )
+    assert res.status_code == 400
+    assert 'csv' in res.get_json()['error'].lower()
+
+def test_csv_empty_file_upload(client):
+    """
+    Verifies that empty CSV files are rejected gracefully.
+    """
+    empty_file = io.BytesIO(b"")
+    res = client.post(
+        '/api/upload',
+        data={'file': (empty_file, 'empty.csv')},
+        content_type='multipart/form-data'
+    )
+    assert res.status_code == 400
+
+def test_security_sql_injection_resistance(client):
+    """
+    Security check: Submits classic SQL injection vectors to search and form endpoints.
+    Verifies that parameterized queries prevent syntax breakage or table dropping.
+    """
+    # 1. SQL injection in student search query parameter
+    sql_inj_query = "CS2026'; DROP TABLE students; --"
+    res_search = client.get(f'/api/students?search={sql_inj_query}')
+    assert res_search.status_code == 200  # Handled safely, returning empty or matched list
+
+    # 2. Table still exists and is intact
+    res_table_check = client.get('/api/students')
+    assert res_table_check.status_code == 200
+    assert res_table_check.get_json()['total_count'] >= 30
+
+    # 3. SQL injection in student creation payload
+    res_create = client.post('/api/students', json={
+        'roll_number': "INJ-01' OR '1'='1",
+        'name': "Hacker'; DELETE FROM students; --",
+        'attendance_percentage': 50.0,
+        'marks': 50.0
+    })
+    # Either accepted as literal string or validated cleanly, but never executed as raw SQL
+    assert res_create.status_code in (201, 400)
+
+    # 4. Final verification: Table is still healthy
+    res_health = client.get('/api/health')
+    assert res_health.status_code == 200
+    assert res_health.get_json()['database'] == 'connected'
+
+def test_security_xss_sanitization(client):
+    """
+    Security check: Submits XSS script tags and verifies they are stored harmlessly as literal strings.
+    """
+    xss_payload = "<script>alert('XSS')</script>"
+    res = client.post('/api/students', json={
+        'roll_number': 'XSS-01',
+        'name': xss_payload,
+        'attendance_percentage': 80.0,
+        'marks': 80.0
+    })
+    assert res.status_code == 201
+    created_id = res.get_json()['student']['id']
+
+    # Retrieve and verify literal representation
+    get_res = client.get(f'/api/students/{created_id}')
+    assert get_res.status_code == 200
+    assert get_res.get_json()['student']['name'] == xss_payload
+
+
 

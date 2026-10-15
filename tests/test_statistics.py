@@ -121,3 +121,117 @@ def test_perform_statistical_analysis_full_pipeline(tmp_path):
     assert res['anova']['post_hoc'] is not None
     assert len(res['anova']['post_hoc']['comparisons']) >= 1
 
+def test_statistical_known_negative_association(tmp_path):
+    """
+    Synthetic dataset with deliberate negative linear association:
+    Higher attendance corresponds to lower marks (e.g. inverse scale).
+    """
+    test_db = str(tmp_path / "neg.db")
+    import sqlite3
+    conn = sqlite3.connect(test_db)
+    conn.execute("CREATE TABLE students (id INTEGER PRIMARY KEY, roll_number TEXT, name TEXT, attendance_percentage REAL, marks REAL)")
+    # Synthetic negative correlation: marks = 100 - attendance + noise
+    np.random.seed(42)
+    att = np.linspace(40, 95, 20)
+    marks = 100 - att + np.random.normal(0, 2, 20)
+    for i in range(20):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+1, f"NEG-{i}", f"Student {i}", float(att[i]), float(marks[i])))
+    conn.commit()
+    conn.close()
+
+    res = stats_service.perform_statistical_analysis(db_path=test_db)
+    assert res['status'] == 'success'
+    assert res['pearson']['r'] < -0.80
+    assert res['pearson']['significant'] is True
+    assert "Negative" in res['pearson']['strength']
+    assert res['spearman']['rho'] < -0.80
+
+def test_statistical_no_observed_association(tmp_path):
+    """
+    Synthetic dataset with independent uniform variables: zero true correlation (p >= 0.05).
+    """
+    test_db = str(tmp_path / "uncorrelated.db")
+    import sqlite3
+    conn = sqlite3.connect(test_db)
+    conn.execute("CREATE TABLE students (id INTEGER PRIMARY KEY, roll_number TEXT, name TEXT, attendance_percentage REAL, marks REAL)")
+    # Uncorrelated data
+    np.random.seed(123)
+    att = np.random.uniform(40, 95, 30)
+    marks = np.random.uniform(40, 95, 30)
+    for i in range(30):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+1, f"UNC-{i}", f"Student {i}", float(att[i]), float(marks[i])))
+    conn.commit()
+    conn.close()
+
+    res = stats_service.perform_statistical_analysis(db_path=test_db)
+    assert res['status'] == 'success'
+    assert abs(res['pearson']['r']) < 0.35
+    assert res['pearson']['significant'] is False
+    assert res['pearson']['decision'] == "Fail to reject H0"
+
+def test_statistical_constant_marks(tmp_path):
+    """
+    Synthetic dataset where all students have identical marks (zero variance in Y).
+    """
+    test_db = str(tmp_path / "const_marks.db")
+    import sqlite3
+    conn = sqlite3.connect(test_db)
+    conn.execute("CREATE TABLE students (id INTEGER PRIMARY KEY, roll_number TEXT, name TEXT, attendance_percentage REAL, marks REAL)")
+    for i in range(10):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+1, f"CM-{i}", f"Student {i}", float(50 + i * 4), 75.0))
+    conn.commit()
+    conn.close()
+
+    res = stats_service.perform_statistical_analysis(db_path=test_db)
+    assert res['status'] == 'constant_variance'
+    assert 'zero variance' in res['message'].lower()
+
+def test_statistical_empty_attendance_groups(tmp_path):
+    """
+    Synthetic dataset where students only belong to ONE group (e.g. all High >= 80%).
+    ANOVA should report insufficient_groups gracefully.
+    """
+    test_db = str(tmp_path / "one_group.db")
+    import sqlite3
+    conn = sqlite3.connect(test_db)
+    conn.execute("CREATE TABLE students (id INTEGER PRIMARY KEY, roll_number TEXT, name TEXT, attendance_percentage REAL, marks REAL)")
+    for i in range(10):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+1, f"HG-{i}", f"High Student {i}", float(85 + i), float(80 + i)))
+    conn.commit()
+    conn.close()
+
+    res = stats_service.perform_statistical_analysis(db_path=test_db)
+    assert res['status'] == 'success'
+    assert res['groups']['high']['count'] == 10
+    assert res['groups']['medium']['count'] == 0
+    assert res['groups']['low']['count'] == 0
+    assert res['anova']['status'] == 'insufficient_groups'
+
+def test_statistical_unequal_variances_welch(tmp_path):
+    """
+    Synthetic dataset with heteroscedasticity (severely unequal group variances),
+    proving that Levene's test detects variance inequality and automatically triggers Welch's ANOVA.
+    """
+    test_db = str(tmp_path / "unequal_var.db")
+    import sqlite3
+    conn = sqlite3.connect(test_db)
+    conn.execute("CREATE TABLE students (id INTEGER PRIMARY KEY, roll_number TEXT, name TEXT, attendance_percentage REAL, marks REAL)")
+    # Low group: tiny variance (std ~ 0.5)
+    for i in range(10):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+1, f"LV-{i}", f"Low {i}", 45.0 + i*0.5, 40.0 + (i % 2)*0.5))
+    # Medium group: medium variance (std ~ 5)
+    for i in range(10):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+11, f"MV-{i}", f"Med {i}", 65.0 + i, 60.0 + (i - 5)*2))
+    # High group: massive variance (std ~ 20)
+    for i in range(10):
+        conn.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?)", (i+21, f"HV-{i}", f"High {i}", 85.0 + i, 50.0 + (i - 5)*8))
+    conn.commit()
+    conn.close()
+
+    res = stats_service.perform_statistical_analysis(db_path=test_db)
+    assert res['status'] == 'success'
+    assert res['assumptions']['homogeneity_of_variance']['equal_variances_assumed'] is False
+    assert "Welch" in res['anova']['test_name']
+    assert "Games-Howell" in res['anova']['post_hoc']['method']
+
+
