@@ -53,9 +53,9 @@ const Charts = (() => {
       scatterChartInstance = null;
     }
 
-    const points = students.map(s => ({
-      x: Number(s.attendance_percentage),
-      y: Number(s.marks),
+    const points = (students || []).map(s => ({
+      x: Number(s.x !== undefined ? s.x : s.attendance_percentage),
+      y: Number(s.y !== undefined ? s.y : s.marks),
       name: s.name,
       roll_number: s.roll_number
     }));
@@ -149,7 +149,7 @@ const Charts = (() => {
   }
 
   // Render or Update Group Comparison Bar Chart
-  function renderGroupBarChart(canvasId, students) {
+  function renderGroupBarChart(canvasId, inputData) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return;
 
@@ -158,28 +158,40 @@ const Charts = (() => {
       barChartInstance = null;
     }
 
-    // Bucket students
-    const lowGroup = students.filter(s => s.attendance_percentage < 60);
-    const medGroup = students.filter(s => s.attendance_percentage >= 60 && s.attendance_percentage < 80);
-    const highGroup = students.filter(s => s.attendance_percentage >= 80);
+    let labels = [];
+    let dataValues = [];
+    let counts = [];
 
-    const calcAvg = arr => arr.length ? Number((arr.reduce((acc, curr) => acc + curr.marks, 0) / arr.length).toFixed(1)) : 0;
+    if (Array.isArray(inputData) && inputData.length > 0 && inputData[0].avg_marks !== undefined) {
+      // Direct group_averages array from /api/dashboard
+      labels = inputData.map(g => `${g.group}\n(n=${g.count})`);
+      dataValues = inputData.map(g => Number(g.avg_marks));
+      counts = inputData.map(g => Number(g.count));
+    } else {
+      // Calculated from raw array
+      const arr = inputData || [];
+      const lowGroup = arr.filter(s => (s.attendance_percentage ?? s.x) < 60);
+      const medGroup = arr.filter(s => (s.attendance_percentage ?? s.x) >= 60 && (s.attendance_percentage ?? s.x) < 80);
+      const highGroup = arr.filter(s => (s.attendance_percentage ?? s.x) >= 80);
 
-    const lowAvg = calcAvg(lowGroup);
-    const medAvg = calcAvg(medGroup);
-    const highAvg = calcAvg(highGroup);
+      const calcAvg = a => a.length ? Number((a.reduce((acc, curr) => acc + (curr.marks ?? curr.y), 0) / a.length).toFixed(1)) : 0;
+
+      labels = [
+        `Low (<60%)\n(n=${lowGroup.length})`,
+        `Medium (60-80%)\n(n=${medGroup.length})`,
+        `High (≥80%)\n(n=${highGroup.length})`
+      ];
+      dataValues = [calcAvg(lowGroup), calcAvg(medGroup), calcAvg(highGroup)];
+      counts = [lowGroup.length, medGroup.length, highGroup.length];
+    }
 
     barChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: [
-          `Low (<60%)\n(n=${lowGroup.length})`,
-          `Medium (60-80%)\n(n=${medGroup.length})`,
-          `High (≥80%)\n(n=${highGroup.length})`
-        ],
+        labels: labels,
         datasets: [{
           label: 'Average Examination Marks',
-          data: [lowAvg, medAvg, highAvg],
+          data: dataValues,
           backgroundColor: [
             'rgba(220, 38, 38, 0.85)',   // Rose
             'rgba(217, 119, 6, 0.85)',   // Amber
@@ -204,8 +216,8 @@ const Charts = (() => {
             callbacks: {
               afterLabel: (context) => {
                 const idx = context.dataIndex;
-                const counts = [lowGroup.length, medGroup.length, highGroup.length];
-                return `Group Sample Size: ${counts[idx]} students`;
+                const sampleCount = counts[idx] !== undefined ? counts[idx] : 0;
+                return `Group Sample Size: ${sampleCount} students`;
               }
             }
           }

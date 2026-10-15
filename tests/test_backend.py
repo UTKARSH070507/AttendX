@@ -220,3 +220,25 @@ def test_export_csv_report_endpoint(client):
     assert response.mimetype == 'text/csv'
     assert b'roll_number,name,attendance_percentage,marks' in response.data
 
+def test_cors_headers_and_preflight(client):
+    """
+    Verifies that requests from port 5500 receive appropriate CORS headers
+    and OPTIONS preflight returns HTTP 204.
+    """
+    # 1. Preflight OPTIONS on API route
+    opt_res = client.options('/api/analyze', headers={'Origin': 'http://127.0.0.1:5500'})
+    assert opt_res.status_code == 204
+    assert opt_res.headers.get('Access-Control-Allow-Origin') == 'http://127.0.0.1:5500'
+    assert 'GET' in opt_res.headers.get('Access-Control-Allow-Methods')
+
+    # 2. GET on API route with Origin
+    get_res = client.get('/api/analyze', headers={'Origin': 'http://127.0.0.1:5500'})
+    assert get_res.status_code == 200
+    assert get_res.headers.get('Access-Control-Allow-Origin') == 'http://127.0.0.1:5500'
+
+    # 3. GET on students route with Origin
+    students_res = client.get('/api/students', headers={'Origin': 'http://127.0.0.1:5500'})
+    assert students_res.status_code == 200
+    assert students_res.headers.get('Access-Control-Allow-Origin') == 'http://127.0.0.1:5500'
+
+

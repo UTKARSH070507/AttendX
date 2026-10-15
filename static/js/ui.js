@@ -134,6 +134,11 @@ const UI = (() => {
 
       window.location.hash = tabId;
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Automatically refresh statistical calculations when navigating to analysis tab
+      if (tabId === 'analysis' && window.App && typeof window.App.loadStatisticalAnalysis === 'function') {
+        window.App.loadStatisticalAnalysis();
+      }
     }
 
     navLinks.forEach(link => {

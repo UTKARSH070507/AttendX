@@ -92,9 +92,9 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="badge-mode">
-        <span class="status-dot"></span>
-        <span>UI Dev Mode (Phase 2)</span>
+      <div class="badge-mode" style="background-color: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+        <span class="status-dot" style="background-color: #10b981;"></span>
+        <span>System Online</span>
       </div>
     </div>
   </aside>
@@ -135,15 +135,8 @@
            ===================================================================== -->
       <section id="section-dashboard" class="tab-section active">
         
-        <!-- Preview Mode Banner -->
-        <div class="preview-banner">
-          <div class="preview-banner-text">
-            <svg style="width:20px; height:20px; color:#b45309;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span><strong>Phase 2 Frontend Preview:</strong> Displaying interactive interface with temporary sample records. Real statistical calculations will be computed directly by SciPy/Pandas from the SQLite database in Phase 5.</span>
-          </div>
-        </div>
+        <!-- Live System Status Notice -->
+        <div id="dashboard-alert-container"></div>
 
         <!-- Metric Stat Cards -->
         <div class="grid-4" style="margin-bottom: var(--spacing-6);">
@@ -256,19 +249,19 @@
           <div class="card-body">
             <div class="grid-3">
               <div class="stat-highlight-box">
-                <span class="stat-highlight-title">Linear Correlation ($r$)</span>
-                <span class="stat-highlight-val" style="color:var(--color-primary);">+0.982</span>
-                <span class="stat-highlight-sub">Strong positive linear association ($p &lt; 0.001$)</span>
+                <span class="stat-highlight-title">Linear Correlation (r)</span>
+                <span id="dash-summary-r" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                <span id="dash-summary-r-sub" class="stat-highlight-sub">Computing Pearson r...</span>
               </div>
               <div class="stat-highlight-box">
-                <span class="stat-highlight-title">Rank Correlation ($\rho$)</span>
-                <span class="stat-highlight-val" style="color:var(--color-primary);">+0.979</span>
-                <span class="stat-highlight-sub">Consistent monotonic increase ($p &lt; 0.001$)</span>
+                <span class="stat-highlight-title">Rank Correlation (&rho;)</span>
+                <span id="dash-summary-rho" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                <span id="dash-summary-rho-sub" class="stat-highlight-sub">Computing Spearman &rho;...</span>
               </div>
               <div class="stat-highlight-box">
-                <span class="stat-highlight-title">One-Way ANOVA</span>
-                <span class="stat-highlight-val" style="color:var(--status-success);">Significant ($p &lt; 0.05$)</span>
-                <span class="stat-highlight-sub">Differences across tiers are statistically significant</span>
+                <span class="stat-highlight-title">Multi-Group ANOVA</span>
+                <span id="dash-summary-anova" class="stat-highlight-val" style="color:var(--status-success);">--</span>
+                <span id="dash-summary-anova-sub" class="stat-highlight-sub">Evaluating group variances...</span>
               </div>
             </div>
           </div>
@@ -481,8 +474,12 @@
         
         <!-- Research Hypotheses Banner -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <h3 class="card-title">Research Hypotheses Formulation</h3>
+            <button id="btn-recalculate-analysis" class="btn btn-secondary btn-sm" onclick="App.loadStatisticalAnalysis()" title="Recalculate statistical testing from database">
+              <svg style="width:14px; height:14px; margin-right:4px; vertical-align:text-bottom;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Recalculate Analysis</span>
+            </button>
           </div>
           <div class="card-body">
             <div class="grid-2">
@@ -518,19 +515,19 @@
             <div class="card-body">
               <div class="grid-2" style="margin-bottom:var(--spacing-4);">
                 <div class="stat-highlight-box">
-                  <span class="stat-highlight-title">Correlation ($r$)</span>
-                  <span id="stats-pearson-r" class="stat-highlight-val" style="color:var(--color-primary);">+0.982</span>
-                  <span class="stat-highlight-sub">Strength: Very Strong Positive</span>
+                  <span class="stat-highlight-title">Correlation (r)</span>
+                  <span id="stats-pearson-r" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
+                  <span id="stats-pearson-strength" class="stat-highlight-sub">Awaiting calculation...</span>
                 </div>
                 <div class="stat-highlight-box">
                   <span class="stat-highlight-title">Two-Sided P-Value</span>
-                  <span id="stats-pearson-p" class="stat-highlight-val" style="color:var(--status-success);">p &lt; 0.001</span>
-                  <span class="stat-highlight-sub">Statistically Significant ($\alpha=0.05$)</span>
+                  <span id="stats-pearson-p" class="stat-highlight-val" style="color:var(--status-success);">--</span>
+                  <span id="stats-pearson-sig" class="stat-highlight-sub">Significance (&alpha;=0.05)</span>
                 </div>
               </div>
               <div style="font-size:var(--font-size-xs); color:var(--text-secondary); background:var(--bg-surface-alt); padding:var(--spacing-3); border-radius:var(--radius-md);">
-                <div><strong>95% Confidence Interval:</strong> <span id="stats-pearson-ci">[+0.962, +0.991]</span></div>
-                <div style="margin-top:4px;"><strong>Interpretation:</strong> Evaluates linear association between attendance percentage and exam marks. Because $p < 0.05$, we reject $H_0$.</div>
+                <div><strong>95% Confidence Interval:</strong> <span id="stats-pearson-ci">[--, --]</span></div>
+                <div style="margin-top:4px;"><strong>Interpretation:</strong> <span id="stats-pearson-interp">Evaluates linear association between attendance percentage and exam marks.</span></div>
               </div>
             </div>
           </div>
@@ -543,13 +540,13 @@
             <div class="card-body">
               <div class="grid-2" style="margin-bottom:var(--spacing-4);">
                 <div class="stat-highlight-box">
-                  <span class="stat-highlight-title">Rank Correlation ($\rho$)</span>
-                  <span class="stat-highlight-val" style="color:var(--color-primary);">+0.979</span>
+                  <span class="stat-highlight-title">Rank Correlation (&rho;)</span>
+                  <span id="stats-spearman-rho" class="stat-highlight-val" style="color:var(--color-primary);">--</span>
                   <span class="stat-highlight-sub">Monotonic Relationship</span>
                 </div>
                 <div class="stat-highlight-box">
                   <span class="stat-highlight-title">P-Value</span>
-                  <span class="stat-highlight-val" style="color:var(--status-success);">p &lt; 0.001</span>
+                  <span id="stats-spearman-p" class="stat-highlight-val" style="color:var(--status-success);">--</span>
                   <span class="stat-highlight-sub">Statistically Significant</span>
                 </div>
               </div>
@@ -588,6 +585,65 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- ANOVA & Post-Hoc Analysis Results -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Multi-Group Variance &amp; Post-Hoc Comparisons</h3>
+              <p class="card-description">Hypothesis 2: Evaluation of differences in examination marks across attendance tiers</p>
+            </div>
+            <span id="anova-test-badge" class="badge badge-primary">One-Way ANOVA</span>
+          </div>
+          <div class="card-body">
+            <div class="grid-2" style="margin-bottom:var(--spacing-5);">
+              
+              <!-- ANOVA Test Summary Box -->
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title" id="anova-method-title">Omnibus Hypothesis Test</span>
+                <div style="display:flex; align-items:baseline; gap:0.5rem; margin-top:4px;">
+                  <span id="anova-f-stat" class="stat-highlight-val">F = --</span>
+                  <span id="anova-df-stat" style="font-size:var(--font-size-xs); color:var(--text-muted);">(df1, df2)</span>
+                </div>
+                <div id="anova-p-val" style="font-size:var(--font-size-sm); font-weight:600; color:var(--status-success); margin-top:2px;">p = --</div>
+                <div id="anova-verdict" class="stat-highlight-sub">Awaiting statistical analysis calculation...</div>
+              </div>
+
+              <!-- Homogeneity of Variance Box -->
+              <div class="stat-highlight-box">
+                <span class="stat-highlight-title">Assumption: Homogeneity of Variance</span>
+                <div style="display:flex; align-items:baseline; gap:0.5rem; margin-top:4px;">
+                  <span id="levene-stat" class="stat-highlight-val" style="font-size:1.25rem;">Levene W = --</span>
+                </div>
+                <div id="levene-p-val" style="font-size:var(--font-size-sm); font-weight:600; color:var(--text-main); margin-top:2px;">p = --</div>
+                <div id="levene-verdict" class="stat-highlight-sub">Assessing variance equality across groups.</div>
+              </div>
+
+            </div>
+
+            <!-- Post-Hoc Comparisons Table -->
+            <div>
+              <h4 style="font-size:var(--font-size-sm); font-weight:600; margin-bottom:var(--spacing-2);">Pairwise Post-Hoc Comparisons (<span id="posthoc-method-name">Tukey HSD</span>)</h4>
+              <div class="table-responsive">
+                <table class="data-table" style="font-size:0.8rem;">
+                  <thead>
+                    <tr>
+                      <th>Pairwise Comparison</th>
+                      <th>Mean Difference</th>
+                      <th>95% Confidence Interval</th>
+                      <th>Adjusted P-Value</th>
+                      <th>Significant (&alpha;=0.05)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="posthoc-table-body">
+                    <!-- Populated dynamically via App.updateStatisticalAnalysis() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -799,6 +855,7 @@
 
 <!-- Scripts -->
 <script src="/static/js/ui.js"></script>
+<script src="/static/js/api.js"></script>
 <script src="/static/js/charts.js"></script>
 <script src="/static/js/app.js"></script>
 

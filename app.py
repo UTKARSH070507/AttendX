@@ -3,7 +3,7 @@ AttendX - Student Attendance vs Academic Performance Analysis System
 Flask Application Factory and Server Entry Point
 """
 from datetime import datetime, timezone
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, make_response
 from config import Config
 from database import init_db, get_db_connection
 from api.student_routes import student_bp
@@ -55,6 +55,7 @@ def create_app(config_class=Config):
         }), 200
 
     @app.route('/', methods=['GET'])
+    @app.route('/index.html', methods=['GET'])
     def index():
         """
         Serves the AttendX single-page dashboard.
@@ -62,10 +63,30 @@ def create_app(config_class=Config):
         return render_template('index.html')
 
     # --------------------------------------------------------------------------
-    # Security Headers Middleware
+    # CORS & Security Headers Middleware
     # --------------------------------------------------------------------------
+    @app.before_request
+    def handle_cors_preflight():
+        if request.method == 'OPTIONS' and request.path.startswith('/api'):
+            response = make_response('', 204)
+            origin = request.headers.get('Origin', '*')
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            response.headers['Access-Control-Max-Age'] = '86400'
+            return response
+
     @app.after_request
-    def set_security_headers(response):
+    def set_security_and_cors_headers(response):
+        origin = request.headers.get('Origin')
+        if origin:
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+        else:
+            response.headers['Access-Control-Allow-Origin'] = '*'
+
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'

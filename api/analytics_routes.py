@@ -17,7 +17,7 @@ def get_dashboard_data():
     data = stats_service.calculate_dashboard_metrics(db_path=db_path)
     return jsonify(data), 200
 
-@analytics_bp.route('/analyze', methods=['GET'])
+@analytics_bp.route('/analyze', methods=['GET', 'POST'])
 def get_statistical_analysis():
     """
     GET /api/analyze
