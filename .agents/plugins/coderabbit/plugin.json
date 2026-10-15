@@ -1,0 +1,7 @@
+{
+  "name": "coderabbit",
+  "displayName": "CodeRabbit",
+  "version": "1.0.0",
+  "description": "Automated code review, security analysis, and quality gate for autonomous coding agents."
+}
+

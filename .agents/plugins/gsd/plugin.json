@@ -1,0 +1,7 @@
+{
+  "name": "gsd",
+  "displayName": "GSD (Get Stuff Done)",
+  "version": "1.0.0",
+  "description": "Spec-driven, context-engineered agent workflow system that defeats context rot through structured planning, execution discipline, and explicit verification gates."
+}
+
