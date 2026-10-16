@@ -15,7 +15,10 @@ def app(tmp_path):
         DATABASE_PATH = test_db
         TESTING = True
 
-    return create_app(IntegrationConfig)
+    app_instance = create_app(IntegrationConfig)
+    from database import seed_initial_data
+    seed_initial_data(test_db)
+    return app_instance
 
 @pytest.fixture
 def client(app):

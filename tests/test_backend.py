@@ -18,6 +18,8 @@ def app(tmp_path):
         TESTING = True
 
     app_instance = create_app(RuntimeTestConfig)
+    from database import seed_initial_data
+    seed_initial_data(test_db)
     return app_instance
 
 @pytest.fixture
@@ -382,6 +384,167 @@ def test_security_xss_sanitization(client):
     get_res = client.get(f'/api/students/{created_id}')
     assert get_res.status_code == 200
     assert get_res.get_json()['student']['name'] == xss_payload
+
+# ==============================================================================
+# 6. Database Initialization, Startup Seeding & Persistence Verification
+# ==============================================================================
+def test_init_db_empty_database_does_not_insert_students(tmp_path):
+    """
+    Verifies that calling init_db() on an empty database initializes schema,
+    indexes, and constraints, but inserts ZERO students.
+    """
+    empty_db = str(tmp_path / "empty_schema.db")
+    init_db(empty_db)
+    
+    conn = get_db_connection(empty_db)
+    try:
+        # Check table exists
+        cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='students'")
+        assert cur.fetchone() is not None
+        
+        # Check record count is exactly 0
+        count_cur = conn.execute("SELECT COUNT(*) FROM students")
+        assert count_cur.fetchone()[0] == 0
+    finally:
+        conn.close()
+
+def test_app_startup_empty_database_remains_empty(tmp_path):
+    """
+    Verifies that starting the Flask application with an empty database leaves
+    the database empty (0 students) and does not insert any sample records.
+    """
+    fresh_db = str(tmp_path / "fresh_app.db")
+    
+    class FreshConfig(TestConfig):
+        DATABASE_PATH = fresh_db
+        TESTING = True
+
+    app = create_app(FreshConfig)
+    client = app.test_client()
+
+    # GET /api/students should return empty list
+    res = client.get('/api/students')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data['total_count'] == 0
+    assert data['students'] == []
+
+    # GET /api/dashboard should report 0 total students
+    dash_res = client.get('/api/dashboard')
+    assert dash_res.status_code == 200
+    assert dash_res.get_json()['total_students'] == 0
+
+    # GET /api/analyze should report insufficient_data gracefully
+    stats_res = client.get('/api/analyze')
+    assert stats_res.status_code == 200
+    assert stats_res.get_json()['status'] == 'insufficient_data'
+
+def test_delete_all_students_and_restart_does_not_repopulate(tmp_path):
+    """
+    Verifies that deleting all students from the database and restarting the
+    application does NOT re-insert or re-seed sample students.
+    """
+    restart_db = str(tmp_path / "restart_test.db")
+    
+    class RestartConfig(TestConfig):
+        DATABASE_PATH = restart_db
+        TESTING = True
+
+    # 1. Start app and insert sample data
+    app1 = create_app(RestartConfig)
+    client1 = app1.test_client()
+    from database import seed_initial_data
+    seed_initial_data(restart_db)
+    
+    res1 = client1.get('/api/students')
+    assert res1.get_json()['total_count'] == 30
+
+    # 2. Delete all students
+    conn = get_db_connection(restart_db)
+    conn.execute("DELETE FROM students")
+    conn.commit()
+    count_after_del = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    conn.close()
+    assert count_after_del == 0
+
+    # 3. Simulate server restart with same database file
+    app2 = create_app(RestartConfig)
+    client2 = app2.test_client()
+    
+    # 4. Must remain completely empty
+    res2 = client2.get('/api/students')
+    assert res2.status_code == 200
+    assert res2.get_json()['total_count'] == 0
+    assert res2.get_json()['students'] == []
+
+    conn2 = get_db_connection(restart_db)
+    assert conn2.execute("SELECT COUNT(*) FROM students").fetchone()[0] == 0
+    conn2.close()
+
+def test_manual_student_creation_on_empty_database(tmp_path):
+    """
+    Verifies that adding students manually via the API works on a newly initialized empty database.
+    """
+    manual_db = str(tmp_path / "manual_test.db")
+    
+    class ManualConfig(TestConfig):
+        DATABASE_PATH = manual_db
+        TESTING = True
+
+    app = create_app(ManualConfig)
+    client = app.test_client()
+
+    # Create first student
+    post_res = client.post('/api/students', json={
+        'roll_number': 'MANUAL-001',
+        'name': 'Manual Student',
+        'attendance_percentage': 87.5,
+        'marks': 84.0
+    })
+    assert post_res.status_code == 201
+    created = post_res.get_json()['student']
+    assert created['roll_number'] == 'MANUAL-001'
+    assert created['name'] == 'Manual Student'
+
+    # Verify student is in list
+    list_res = client.get('/api/students')
+    assert list_res.get_json()['total_count'] == 1
+    assert list_res.get_json()['students'][0]['roll_number'] == 'MANUAL-001'
+
+def test_csv_import_on_empty_database(tmp_path):
+    """
+    Verifies that importing students through CSV works on an initially empty database.
+    """
+    csv_db = str(tmp_path / "csv_import_test.db")
+    
+    class CSVConfig(TestConfig):
+        DATABASE_PATH = csv_db
+        TESTING = True
+
+    app = create_app(CSVConfig)
+    client = app.test_client()
+
+    csv_data = (
+        "roll_number,name,attendance_percentage,marks\n"
+        "CSV-001,Student Alpha,90.0,85.0\n"
+        "CSV-002,Student Beta,70.0,65.0\n"
+        "CSV-003,Student Gamma,50.0,45.0\n"
+    )
+    upload_res = client.post(
+        '/api/upload',
+        data={'file': (io.BytesIO(csv_data.encode('utf-8')), 'test.csv')},
+        content_type='multipart/form-data'
+    )
+    assert upload_res.status_code == 200
+    assert upload_res.get_json()['inserted_count'] == 3
+
+    list_res = client.get('/api/students')
+    assert list_res.get_json()['total_count'] == 3
+    rolls = [s['roll_number'] for s in list_res.get_json()['students']]
+    assert 'CSV-001' in rolls
+    assert 'CSV-002' in rolls
+    assert 'CSV-003' in rolls
+
 
 
 

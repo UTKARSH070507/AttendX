@@ -90,8 +90,9 @@ def test_perform_statistical_analysis_constant_values(tmp_path):
 
 def test_perform_statistical_analysis_full_pipeline(tmp_path):
     test_db = str(tmp_path / "full.db")
-    from database import init_db
-    init_db(test_db)  # Seeds 30 realistic records
+    from database import init_db, seed_initial_data
+    init_db(test_db)
+    seed_initial_data(test_db)  # Explicitly seed 30 realistic records for full pipeline validation
 
     res = stats_service.perform_statistical_analysis(db_path=test_db)
     assert res['status'] == 'success'

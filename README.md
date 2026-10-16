@@ -5,7 +5,7 @@
 [![Database](https://img.shields.io/badge/Database-SQLite3-003B57.svg)](https://www.sqlite.org/)
 [![Statistics](https://img.shields.io/badge/Analytics-SciPy%20%7C%20NumPy-8CAAE6.svg)](https://scipy.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-43%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-48%20Passed-brightgreen.svg)]()
 
 AttendX is a full-stack, research-grade academic analytics platform designed to evaluate and visualize the empirical relationship between classroom attendance percentages and final examination marks. It integrates interactive data exploration, rigorous inferential hypothesis testing via SciPy, and robust data persistence.
 
@@ -147,7 +147,7 @@ AttendX/
 | **Backend Framework** | Python 3 / Flask | Lightweight WSGI REST API handling routing, JSON serialization, and CSV streaming |
 | **Database Engine** | SQLite3 | ACID-compliant embedded database using parameterized SQL queries and schema CHECK constraints |
 | **Scientific Computing** | SciPy (`scipy.stats`) & NumPy | Industrial-strength scientific libraries for correlation, ANOVA, and hypothesis testing |
-| **Test Automation** | Pytest | Comprehensive 43-test suite covering units, edge cases, integration, and security |
+| **Test Automation** | Pytest | Comprehensive 48-test suite covering units, edge cases, integration, security, and startup persistence |
 
 ---
 
@@ -357,7 +357,7 @@ http://127.0.0.1:5500
 
 ## Automated Verification & Testing
 
-The test suite consists of 43 comprehensive tests spanning API routes, database transactions, statistical formulas, edge cases, and end-to-end integration flows.
+The test suite consists of 48 comprehensive tests spanning API routes, database transactions, statistical formulas, edge cases, startup persistence, and end-to-end integration flows.
 
 ### Running All Tests
 ```bash
@@ -368,10 +368,10 @@ The test suite consists of 43 comprehensive tests spanning API routes, database 
 
 | Test Module | Tests | Focus Area | Status |
 | :--- | :---: | :--- | :---: |
-| [`tests/test_backend.py`](file:///home/utkarsh/Projects/AttendX/tests/test_backend.py) | 25 | REST endpoints, CRUD lifecycle, CSV upload validation, SQL injection resistance, XSS sanitization, CORS headers, persistence | **PASSED** |
+| [`tests/test_backend.py`](file:///home/utkarsh/Projects/AttendX/tests/test_backend.py) | 30 | REST endpoints, CRUD lifecycle, CSV upload validation, SQL injection resistance, XSS sanitization, CORS headers, empty database startup, delete-all persistence | **PASSED** |
 | [`tests/test_statistics.py`](file:///home/utkarsh/Projects/AttendX/tests/test_statistics.py) | 12 | Pearson $r$, Spearman $\rho$, Welch's ANOVA, Games-Howell, IQR outliers, zero variance, negative correlations | **PASSED** |
 | [`tests/test_integration.py`](file:///home/utkarsh/Projects/AttendX/tests/test_integration.py) | 6 | Frontend asset delivery, multi-step student lifecycle, CSV import/export pipeline, search/filter/pagination | **PASSED** |
-| **Total** | **43** | **Complete System Verification** | **100% PASS** |
+| **Total** | **48** | **Complete System Verification** | **100% PASS** |
 
 ---
 

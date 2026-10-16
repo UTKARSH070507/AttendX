@@ -21,7 +21,7 @@ def create_app(config_class=Config):
     )
     app.config.from_object(config_class)
 
-    # Automatically initialize SQLite database schema and seeds
+    # Automatically initialize SQLite database schema
     init_db(app.config.get('DATABASE_PATH'))
 
     # Register API Blueprints under /api prefix

@@ -1,6 +1,6 @@
 """
 AttendX - Database Module
-SQLite connection manager, schema migration, and initial seeding.
+SQLite connection manager, schema initialization, and database utilities.
 """
 import sqlite3
 import os
@@ -26,7 +26,7 @@ def get_db_connection(db_path=None):
 def init_db(db_path=None):
     """
     Initializes database tables, constraints, and indexes.
-    Seeds sample data if table is currently empty.
+    Does NOT seed sample data; empty databases remain empty on startup.
     """
     conn = get_db_connection(db_path)
     try:
@@ -52,12 +52,18 @@ def init_db(db_path=None):
                 CREATE INDEX IF NOT EXISTS idx_students_attendance 
                 ON students(attendance_percentage);
             """)
+    finally:
+        conn.close()
 
-            # Seed sample dataset if table is empty
-            cursor = conn.execute("SELECT COUNT(*) as count FROM students")
-            row = cursor.fetchone()
-            if row and row['count'] == 0:
-                _seed_initial_data(conn)
+def seed_initial_data(db_path=None):
+    """
+    Explicitly seeds baseline sample records for testing or demonstration.
+    Must be called explicitly; not invoked during init_db() or app startup.
+    """
+    conn = get_db_connection(db_path)
+    try:
+        with conn:
+            _seed_initial_data(conn)
     finally:
         conn.close()
 
